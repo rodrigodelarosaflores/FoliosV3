@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solicitud de Acceso a Planta</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #001f3f; /* azul marino */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      width: 150px;
+    }
+    h1 {
+      color: #003366;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #0077b6;
+      color: white;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005f87;
+    }
+    .status {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .approved {
+      color: green;
+    }
+    .pending {
+      color: orange;
+    }
+    .rejected {
+      color: red;
+    }
+    #felicitaciones {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #felicitaciones img {
+      width: 80px;
+    }
+    #pdfBtn {
+      display: none;
+      background-color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Placeholder_view_vector.svg" alt="Logo ARCOSA" class="logo" />
+    <h1>Solicitud de Acceso a Planta</h1>
+    <label for="folio">Número de Folio</label>
+    <input type="text" id="folio" placeholder="Ej: 2025-001" />
+
+    <label for="email">Tu Correo Electrónico</label>
+    <input type="email" id="email" placeholder="tucorreo@ejemplo.com" />
+
+    <button onclick="enviarSolicitud()">Enviar Solicitud</button>
+
+    <div class="status" id="estado"></div>
+
+    <div id="aprobaciones" style="display:none">
+      <h3>Aprobaciones</h3>
+      <p>Presidencia: <span id="presidenciaStatus" class="pending">Pendiente</span></p>
+      <p>Gerencia: <span id="gerenciaStatus" class="pending">Pendiente</span></p>
+      <p>Supervisión: <span id="supervisionStatus" class="pending">Pendiente</span></p>
+    </div>
+
+    <div id="felicitaciones">
+      <h2>¡Felicidades! Puedes acceder a la planta</h2>
+      <img src="https://cdn-icons-png.flaticon.com/512/456/456115.png" alt="Like Icon" />
+    </div>
+
+    <button id="pdfBtn" onclick="generarPDF()">Descargar Comprobante PDF</button>
+  </div>
+
+  <script>
+    const estado = document.getElementById("estado");
+    const aprobaciones = document.getElementById("aprobaciones");
+    const presidenciaStatus = document.getElementById("presidenciaStatus");
+    const gerenciaStatus = document.getElementById("gerenciaStatus");
+    const supervisionStatus = document.getElementById("supervisionStatus");
+    const felicitaciones = document.getElementById("felicitaciones");
+    const pdfBtn = document.getElementById("pdfBtn");
+
+    const foliosRegistrados = new Set();
+
+    async function enviarSolicitud() {
+      const folio = document.getElementById("folio").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (!folio || !email) {
+        estado.innerHTML = "Por favor completa todos los campos.";
+        estado.className = "status rejected";
+        return;
+      }
+
+      if (foliosRegistrados.has(folio)) {
+        estado.innerHTML = "Este número de folio ya fue registrado.";
+        estado.className = "status rejected";
+        return;
+      }
+
+      foliosRegistrados.add(folio);
+
+      estado.innerHTML = `Solicitud enviada correctamente. Esperando aprobaciones...`;
+      estado.className = "status pending";
+      aprobaciones.style.display = "block";
+
+      console.log(`Enviando correos a responsables...`);
+      console.log(`A: rodrigodelarosaflores@gmail.com, test@gmail.com, valeriaescarregav@gmail.com`);
+      console.log(`CC: ${email}`);
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      presidenciaStatus.textContent = "Aprobado por presidencia";
+      presidenciaStatus.className = "approved";
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      gerenciaStatus.textContent = "Aprobado por gerencia";
+      gerenciaStatus.className = "approved";
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      supervisionStatus.textContent = "Aprobado por supervisión";
+      supervisionStatus.className = "approved";
+
+      estado.innerHTML = "¡Acceso Autorizado a Planta!";
+      estado.className = "status approved";
+
+      felicitaciones.style.display = "block";
+      pdfBtn.style.display = "block";
+    }
+
+    function generarPDF() {
+      const folio = document.getElementById("folio").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("Comprobante de Acceso Autorizado", 20, 20);
+      doc.text(`Folio: ${folio}`, 20, 40);
+      doc.text(`Correo: ${email}`, 20, 50);
+      doc.text("Estado: Aprobado por Presidencia, Gerencia y Supervisión", 20, 60);
+      doc.text("Firmado electrónicamente por Presidencia", 20, 80);
+      doc.save(`Acceso_Planta_${folio}.pdf`);
+    }
+  </script>
+</body>
+</html>
